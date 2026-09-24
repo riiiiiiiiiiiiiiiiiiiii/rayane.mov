@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
+  <url>
+    <loc>https://rayane.mov/</loc>
+    <lastmod>2026-09-23</lastmod>
+    <video:video>
+      <video:thumbnail_loc>https://rayane.mov/media/motion-design-reel-2025.jpg</video:thumbnail_loc>
+      <video:title>Motion Design Reel, 2025</video:title>
+      <video:description>Motion design reel by Rayane Kabbara, 2025.</video:description>
+      <video:content_loc>https://rayane.mov/media/motion-design-reel-2025.mp4</video:content_loc>
+      <video:duration>40</video:duration>
+    </video:video>
+    <video:video>
+      <video:thumbnail_loc>https://rayane.mov/media/2d-reel-2024.jpg</video:thumbnail_loc>
+      <video:title>2D Animation Reel, 2024</video:title>
+      <video:description>2D animation reel by Rayane Kabbara, 2024.</video:description>
+      <video:content_loc>https://rayane.mov/media/2d-reel-2024.mp4</video:content_loc>
+      <video:duration>62</video:duration>
+    </video:video>
+  </url>
+</urlset>
