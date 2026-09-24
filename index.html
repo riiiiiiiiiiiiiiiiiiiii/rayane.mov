@@ -126,6 +126,7 @@
     }
     .frame .play:active span { transform: scale(0.97); }
     .frame .play svg { width: 10px; height: 10px; fill: currentColor; }
+    .frame.playing .play { display: none; }
     .cap { max-width: 60ch; margin: 0; }
 
     /* Lightbox: the page frosts behind the reel, the player scales in, Close sits under the frame. */
@@ -333,7 +334,21 @@
       const lb = document.getElementById('lightbox'), stage = lb.querySelector('.stage');
       const title = document.getElementById('lightbox-title'), closeBtn = lb.querySelector('.close');
       let player = null, opener = null, closing = false;
+      const touch = matchMedia('(hover: none)').matches || matchMedia('(pointer: coarse)').matches;
+      // Phones and tablets skip the lightbox: the reel plays in the device's native full-screen player.
+      function openFullscreen(frame) {
+        const v = frame.querySelector('video');
+        v.controls = true;
+        frame.classList.add('playing');   // hide the Play label so it never covers the native controls
+        const reset = () => { v.pause(); v.controls = false; v.load(); frame.classList.remove('playing'); };
+        v.addEventListener('webkitendfullscreen', reset, { once: true });                       // iPhone
+        v.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) reset(); }); // Android
+        v.play().catch(() => {});
+        if (v.webkitEnterFullscreen) v.webkitEnterFullscreen();
+        else if (v.requestFullscreen) v.requestFullscreen().catch(() => {});
+      }
       function open(frame) {
+        if (touch) return openFullscreen(frame);
         if (player) return;
         opener = frame.querySelector('.play');
         const src = frame.querySelector('video');
