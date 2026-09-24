@@ -354,7 +354,7 @@
         opener = frame.querySelector('.play');
         const src = frame.querySelector('video');
         player = src.cloneNode(true);
-        player.removeAttribute('class'); player.controls = true; player.preload = 'auto';
+        player.removeAttribute('class'); player.preload = 'auto';   // controls come on once the frame has landed
         stage.insertBefore(player, title);
         title.textContent = frame.closest('.piece').querySelector('.cap').textContent;
         document.documentElement.style.setProperty('--sbw', (window.innerWidth - document.documentElement.clientWidth) + 'px');
@@ -362,7 +362,11 @@
         lb.classList.add('open');
         // FLIP: measure the poster and the stage's resting place, then animate the stage from one to the other.
         const from = frame.getBoundingClientRect(), to = stage.getBoundingClientRect();
-        if (!reduced) stage.animate([{ transform: fit(from, to) }, { transform: 'none' }], { duration: 460, easing: EASE });
+        if (reduced) { player.controls = true; }
+        else {
+          const anim = stage.animate([{ transform: fit(from, to) }, { transform: 'none' }], { duration: 460, easing: EASE });
+          anim.onfinish = () => { if (player) player.controls = true; };
+        }
         lb.classList.add('in');
         player.play().catch(() => {});
         stage.focus({ preventScroll: true });
@@ -371,6 +375,7 @@
         if (!player || closing) return;
         closing = true;
         player.pause();
+        player.controls = false;   // drop the native control bar before the frame shrinks, so it doesn't scale down with it
         // Travel back to wherever the poster is now (the page may have been scrolled before opening).
         const frame = opener.closest('.frame');
         const back = fit(frame.getBoundingClientRect(), stage.getBoundingClientRect());
