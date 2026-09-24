@@ -136,7 +136,6 @@
     .lb.in .lb-back { opacity: 1; }
     /* The stage starts exactly over the poster you clicked and travels into place (and back on close). */
     .lb .stage { position: relative; width: min(100%, calc((100vh - 2 * max(64px, 6vh) - 40px) * 16 / 9)); transform-origin: top left; }
-    .lb.open .stage { transition: transform 460ms cubic-bezier(0.2, 0, 0, 1); }
     .lb .caption, .lb .close { opacity: 0; transition: opacity 200ms ease; }
     .lb.in .caption, .lb.in .close { opacity: 1; transition-delay: 260ms; }
     .lb .stage video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; background: #000; }
@@ -188,7 +187,7 @@
     }
     @media (prefers-reduced-motion: reduce) {
       html { scroll-behavior: auto; }
-      a, .frame .play::before, .frame .play span::after, .lb .lb-back, .lb .stage, .lb .caption, .lb .close { transition: none; }
+      a, .frame .play::before, .frame .play span::after, .lb .lb-back, .lb .caption, .lb .close { transition: none; }
       .armed-reveal .reveal { opacity: 1; transform: none; }
       .armed-reveal .reveal.in { animation: none; }
       .info.armed .w { opacity: 1; }
@@ -361,10 +360,10 @@
         document.documentElement.style.setProperty('--sbw', (window.innerWidth - document.documentElement.clientWidth) + 'px');
         document.body.classList.add('lb-lock');
         lb.classList.add('open');
-        // FLIP: measure the poster and the stage's resting place, start the stage over the poster, then release it.
+        // FLIP: measure the poster and the stage's resting place, then animate the stage from one to the other.
         const from = frame.getBoundingClientRect(), to = stage.getBoundingClientRect();
-        stage.style.transform = fit(from, to);
-        requestAnimationFrame(() => requestAnimationFrame(() => { lb.classList.add('in'); stage.style.transform = ''; }));
+        if (!reduced) stage.animate([{ transform: fit(from, to) }, { transform: 'none' }], { duration: 460, easing: EASE });
+        lb.classList.add('in');
         player.play().catch(() => {});
         stage.focus({ preventScroll: true });
       }
@@ -374,17 +373,21 @@
         player.pause();
         // Travel back to wherever the poster is now (the page may have been scrolled before opening).
         const frame = opener.closest('.frame');
-        stage.style.transform = fit(frame.getBoundingClientRect(), stage.getBoundingClientRect());
+        const back = fit(frame.getBoundingClientRect(), stage.getBoundingClientRect());
         lb.querySelector('.lb-back').style.transitionDelay = '160ms';
         lb.classList.remove('in');
         const finish = () => {
-          lb.classList.remove('open'); stage.style.transform = ''; lb.querySelector('.lb-back').style.transitionDelay = '';
+          lb.classList.remove('open'); lb.querySelector('.lb-back').style.transitionDelay = '';
           player.remove(); player = null; closing = false;
           document.body.classList.remove('lb-lock');
           if (opener) opener.focus({ preventScroll: true });
         };
-        matchMedia('(prefers-reduced-motion: reduce)').matches ? finish() : setTimeout(finish, 480);
+        if (reduced) return finish();
+        const anim = stage.animate([{ transform: 'none' }, { transform: back }], { duration: 460, easing: EASE, fill: 'forwards' });
+        anim.onfinish = () => { anim.cancel(); finish(); };
       }
+      const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const EASE = 'cubic-bezier(0.2, 0, 0, 1)';
       // Transform that places a box of the stage's size exactly over `from`.
       function fit(from, to) {
         return `translate(${from.left - to.left}px, ${from.top - to.top}px) scale(${from.width / to.width}, ${from.height / to.height})`;
