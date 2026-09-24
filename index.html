@@ -142,7 +142,7 @@
     .lb .close:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
     .lb .stage:focus { outline: none; }
     @media (prefers-reduced-transparency: reduce) { .lb .lb-back { background: rgba(0,0,0,0.92); backdrop-filter: none; -webkit-backdrop-filter: none; } }
-    body.lb-lock { overflow: hidden; padding-right: var(--sbw, 0px); }
+    body.lb-lock { overflow: hidden; padding-right: calc(16px + var(--sbw, 0px)); }   /* keep the 16px gutter, add the scrollbar's width so nothing shifts */
 
     /* Reels and loops rise into place as they scroll into view, staggered when several arrive together. */
     .armed-reveal .reveal { opacity: 0; transform: translateY(16px); }
