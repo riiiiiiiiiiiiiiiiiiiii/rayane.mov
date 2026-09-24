@@ -131,7 +131,7 @@
     /* Lightbox: the page frosts behind the reel, the player scales in, Close sits under the frame. */
     .lb { position: fixed; inset: 0; z-index: 100; display: none; align-items: center; justify-content: center; padding: max(64px, 6vh) max(24px, 4vw); }
     .lb.open { display: flex; }
-    .lb .lb-back { position: absolute; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(18px) saturate(120%); -webkit-backdrop-filter: blur(18px) saturate(120%); opacity: 0; transition: opacity 260ms ease; }
+    .lb .lb-back { position: absolute; inset: 0; background: rgba(0,0,0,0.78); backdrop-filter: blur(36px) saturate(120%); -webkit-backdrop-filter: blur(36px) saturate(120%); opacity: 0; transition: opacity 260ms ease; }
     .lb.in .lb-back { opacity: 1; }
     .lb .stage { position: relative; width: min(100%, calc((100vh - 2 * max(64px, 6vh) - 40px) * 16 / 9)); opacity: 0; transform: scale(0.96); transition: opacity 260ms ease, transform 420ms cubic-bezier(0.2, 0, 0, 1); }
     .lb.in .stage { opacity: 1; transform: none; }
