@@ -126,8 +126,23 @@
     }
     .frame .play:active span { transform: scale(0.97); }
     .frame .play svg { width: 10px; height: 10px; fill: currentColor; }
-    .frame.playing .play { display: none; }
     .cap { max-width: 60ch; margin: 0; }
+
+    /* Lightbox: the page frosts behind the reel, the player scales in, Close sits under the frame. */
+    .lb { position: fixed; inset: 0; z-index: 100; display: none; align-items: center; justify-content: center; padding: max(64px, 6vh) max(24px, 4vw); }
+    .lb.open { display: flex; }
+    .lb .lb-back { position: absolute; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(18px) saturate(120%); -webkit-backdrop-filter: blur(18px) saturate(120%); opacity: 0; transition: opacity 260ms ease; }
+    .lb.in .lb-back { opacity: 1; }
+    .lb .stage { position: relative; width: min(100%, calc((100vh - 2 * max(64px, 6vh) - 40px) * 16 / 9)); opacity: 0; transform: scale(0.96); transition: opacity 260ms ease, transform 420ms cubic-bezier(0.2, 0, 0, 1); }
+    .lb.in .stage { opacity: 1; transform: none; }
+    .lb .stage video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; background: #000; }
+    .lb .caption { margin: 12px 0 0; }
+    .lb .close { position: absolute; bottom: -56px; left: 50%; transform: translateX(-50%); background: none; border: 0; padding: 0; cursor: pointer; font: inherit; color: var(--ink); display: inline-flex; align-items: center; min-height: 44px; transition: color 150ms ease; }
+    @media (hover: hover) { .lb .close:hover { color: var(--ink-2); } }
+    .lb .close:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+    .lb .stage:focus { outline: none; }
+    @media (prefers-reduced-transparency: reduce) { .lb .lb-back { background: rgba(0,0,0,0.92); backdrop-filter: none; -webkit-backdrop-filter: none; } }
+    body.lb-lock { overflow: hidden; padding-right: var(--sbw, 0px); }
 
     /* Reels and loops rise into place as they scroll into view, staggered when several arrive together. */
     .armed-reveal .reveal { opacity: 0; transform: translateY(16px); }
@@ -170,7 +185,7 @@
     }
     @media (prefers-reduced-motion: reduce) {
       html { scroll-behavior: auto; }
-      a, .frame .play::before, .frame .play span::after { transition: none; }
+      a, .frame .play::before, .frame .play span::after, .lb .lb-back, .lb .stage { transition: none; }
       .armed-reveal .reveal { opacity: 1; transform: none; }
       .armed-reveal .reveal.in { animation: none; }
       .info.armed .w { opacity: 1; }
@@ -251,6 +266,14 @@
   <footer class="back"><a href="#top">Back to top</a></footer>
   </div>
 
+  <div class="lb" id="lightbox" role="dialog" aria-modal="true" aria-label="Video player">
+    <div class="lb-back" data-close></div>
+    <div class="stage" tabindex="-1">
+      <p class="caption" id="lightbox-title"></p>
+      <button class="close" type="button" data-close>Close</button>
+    </div>
+  </div>
+
   <script>
     // Short loops: download and start only when the row is near the viewport,
     // and stay on the poster frame for viewers who prefer reduced motion.
@@ -304,26 +327,43 @@
     }, { threshold: 0.3 });
     reveal.observe(infoEl);
 
-    document.querySelectorAll('.frame').forEach((frame) => {
-      const video = frame.querySelector('video');
-      const btn = frame.querySelector('.play');
-      btn.addEventListener('click', () => {
-        // Pause any other reel so two soundtracks never overlap.
-        document.querySelectorAll('.frame video').forEach((v) => { if (v !== video) v.pause(); });
-        video.controls = true;
-        frame.classList.add('playing');
-        video.play().catch(() => {});
-      });
-      video.addEventListener('play', () => {
-        document.querySelectorAll('.frame video').forEach((v) => { if (v !== video) v.pause(); });
-      });
-      // When a reel finishes, go back to the poster and Play button instead of a black frame.
-      video.addEventListener('ended', () => {
-        video.controls = false;
-        frame.classList.remove('playing');
-        video.load();
-      });
-    });
+    // Reels open in the lightbox. The frame's own <video> is cloned into the player so both
+    // sources (HEVC and H.264) and the poster come along.
+    (function () {
+      const lb = document.getElementById('lightbox'), stage = lb.querySelector('.stage');
+      const title = document.getElementById('lightbox-title'), closeBtn = lb.querySelector('.close');
+      let player = null, opener = null, closing = false;
+      function open(frame) {
+        if (player) return;
+        opener = frame.querySelector('.play');
+        const src = frame.querySelector('video');
+        player = src.cloneNode(true);
+        player.removeAttribute('class'); player.controls = true; player.preload = 'auto';
+        stage.insertBefore(player, title);
+        title.textContent = frame.closest('.piece').querySelector('.cap').textContent;
+        document.documentElement.style.setProperty('--sbw', (window.innerWidth - document.documentElement.clientWidth) + 'px');
+        document.body.classList.add('lb-lock');
+        lb.classList.add('open');
+        requestAnimationFrame(() => requestAnimationFrame(() => lb.classList.add('in')));
+        player.play().catch(() => {});
+        stage.focus({ preventScroll: true });
+      }
+      function close() {
+        if (!player || closing) return;
+        closing = true;
+        player.pause();
+        lb.classList.remove('in');
+        const finish = () => {
+          lb.classList.remove('open'); player.remove(); player = null; closing = false;
+          document.body.classList.remove('lb-lock');
+          if (opener) opener.focus({ preventScroll: true });
+        };
+        matchMedia('(prefers-reduced-motion: reduce)').matches ? finish() : setTimeout(finish, 300);
+      }
+      document.querySelectorAll('.frame .play').forEach((btn) => btn.addEventListener('click', () => open(btn.closest('.frame'))));
+      lb.querySelectorAll('[data-close]').forEach((el) => el.addEventListener('click', close));
+      addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+    })();
 
     // Pencil trail: the pointer draws a faint, smooth stroke that fades over ~2s.
     // Only on devices with a real pointer, and never for viewers who prefer reduced motion.
