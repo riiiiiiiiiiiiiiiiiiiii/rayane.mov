@@ -20,8 +20,15 @@
 <body>
   <nav class="nav" aria-label="Site"><a href="/">Rayane Kabbara</a><a href="/#info">Info</a></nav>
   <main>
-    <p>There’s nothing at this address.</p>
-    <a href="/">Back to the reels</a>
+    <p data-en="There’s nothing at this address." data-fr="Il n’y a rien à cette adresse.">There’s nothing at this address.</p>
+    <a href="/" data-en="Back to the reels" data-fr="Retour aux démos">Back to the reels</a>
   </main>
+  <script>
+    // Show this page in French when the visitor chose French on the main site, or their browser is in French.
+    let lang = '';
+    try { lang = localStorage.getItem('lang') || ''; } catch (e) {}
+    if (!lang) lang = (navigator.language || '').toLowerCase().startsWith('fr') ? 'fr' : 'en';
+    if (lang === 'fr') { document.documentElement.lang = 'fr'; document.title = 'Page introuvable'; document.querySelectorAll('[data-fr]').forEach((el) => { el.textContent = el.dataset.fr; }); }
+  </script>
 </body>
 </html>
