@@ -145,6 +145,9 @@
     .lb .caption, .lb .close { opacity: 0; transition: opacity 200ms ease; }
     .lb.in .caption, .lb.in .close { opacity: 1; transition-delay: 260ms; }
     .lb .stage video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; background: #000; }
+    /* Panoramic pieces (e.g. the wall projection) keep their own shape in the player. */
+    .lb.wide .stage { width: min(100%, calc((100vh - 2 * max(64px, 6vh) - 40px) * 1920 / 490)); }
+    .lb.wide .stage video { aspect-ratio: 1920 / 490; }
     .lb .caption { margin: 12px 0 0; }
     .lb .close { position: absolute; bottom: -56px; left: 50%; transform: translateX(-50%); background: none; border: 0; padding: 0; cursor: pointer; font: inherit; color: var(--ink); display: inline-flex; align-items: center; min-height: 44px; transition: color 150ms ease; }
     @media (hover: hover) { .lb .close:hover { color: var(--ink-2); } }
@@ -238,6 +241,18 @@
         </button>
       </div>
       <p class="cap" data-i18n="reel2">2D Animation Reel, 2024</p>
+    </article>
+
+    <article class="piece reveal">
+      <div class="frame" data-wide>
+        <video preload="metadata" playsinline poster="media/minute-mapp-2026.jpg" width="1920" height="490">
+          <source src="media/minute-mapp-2026.mp4" type="video/mp4; codecs=avc1">
+        </video>
+        <button class="play" type="button" aria-label="Play Minute MAPP piece 2026" data-i18n-label="play3">
+          <span data-i18n-play><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1 0l9 5-9 5z"/></svg>Play</span>
+        </button>
+      </div>
+      <p class="cap" data-i18n="mapp">Minute MAPP piece, 2026</p>
     </article>
 
     <section class="loops" aria-label="Short loops">
@@ -337,13 +352,15 @@
         bio: 'Rayane is a multidisciplinary artist based in Montreal working in 2D animation. Her practice focuses on frame-by-frame work and traditional animation techniques, combined with mixed media and motion design. Her work consists of short animated films with a heavy emphasis on traditional and experimental animation.',
         reel1: 'Motion Design Reel, 2025', reel2: '2D Animation Reel, 2024',
         play: 'Play', play1: 'Play Motion Design Reel 2025', play2: 'Play 2D Animation Reel 2024',
-        top: 'Back to top', close: 'Close'
+        top: 'Back to top', close: 'Close',
+        mapp: 'Minute MAPP piece, 2026', play3: 'Play Minute MAPP piece 2026'
       },
       fr: {
         bio: 'Rayane est une artiste multidisciplinaire établie à Montréal qui travaille en animation 2D. Sa pratique se concentre sur l’animation image par image et les techniques d’animation traditionnelles, combinées aux techniques mixtes et au motion design. Son travail prend la forme de courts métrages d’animation qui accordent une place importante à l’animation traditionnelle et expérimentale.',
         reel1: 'Démo motion design, 2025', reel2: 'Démo animation 2D, 2024',
         play: 'Lecture', play1: 'Lire la démo motion design 2025', play2: 'Lire la démo animation 2D 2024',
-        top: 'Retour en haut', close: 'Fermer'
+        top: 'Retour en haut', close: 'Fermer',
+        mapp: 'Œuvre Minute MAPP, 2026', play3: 'Lire l’œuvre Minute MAPP 2026'
       }
     };
     const setLang = (lang) => {
@@ -399,6 +416,7 @@
         title.textContent = frame.closest('.piece').querySelector('.cap').textContent;
         document.documentElement.style.setProperty('--sbw', (window.innerWidth - document.documentElement.clientWidth) + 'px');
         document.body.classList.add('lb-lock');
+        lb.classList.toggle('wide', frame.hasAttribute('data-wide'));
         lb.classList.add('open');
         // FLIP: measure the poster and the stage's resting place, then animate the stage from one to the other.
         const from = frame.getBoundingClientRect(), to = stage.getBoundingClientRect();
