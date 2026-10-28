@@ -166,7 +166,7 @@
     /* Subtle vignette: a soft darkening toward the edges of each loop, drawn over the video. */
     .loop { position: relative; }
     .loop::after { content: ""; position: absolute; inset: 0; pointer-events: none;
-      background: radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(0,0,0,0.38) 100%); }
+      background: radial-gradient(ellipse at center, rgba(0,0,0,0) 60%, rgba(0,0,0,0.2) 100%); }
     @media (max-width: 720px) { .loops { grid-template-columns: 1fr; } }
 
     .end { min-height: 100vh; min-height: 100svh; display: grid; grid-template-rows: 1fr auto 1fr; }
