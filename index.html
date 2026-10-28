@@ -103,8 +103,6 @@
     /* EN / FR switch, pinned to the top-right of the nav bar. */
     .lang { position: absolute; right: 0; top: calc(6px + env(safe-area-inset-top, 0px)); display: flex; align-items: center; gap: 4px; min-height: 32px; }
     .lang button { background: none; border: 0; padding: 0 2px; margin: 0; font: inherit; color: var(--ink-2); cursor: pointer; min-height: 32px; transition: color 120ms ease; }
-    .lang button[aria-pressed="true"] { color: var(--ink); }
-    .lang span { color: var(--ink-2); }
     @media (hover: hover) { .lang button:hover { color: var(--ink); } }
 
     .reels { display: grid; gap: 72px; padding-block: 88px 40px; justify-items: center; }
@@ -163,7 +161,7 @@
     /* short muted loops */
     .loops { width: min(100%, var(--reel)); display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; margin-top: 72px; --dim: 0; }
     /* As the bio scrolls into view, the loops fade out completely so they stop competing with the text. */
-    .loops { opacity: calc(1 - var(--dim)); }
+    .loops { opacity: calc(1 - var(--dim)); scroll-margin-top: 72px; }
     .loops video { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; background: #0e0e0e; }
     @media (max-width: 720px) { .loops { grid-template-columns: 1fr; } }
 
@@ -209,10 +207,11 @@
 <body>
   <canvas id="pencil" aria-hidden="true"></canvas>
   <nav class="nav" aria-label="Site">
-    <a href="#top">Rayane Kabbara</a>
+    <a href="#top">Rayane</a>
+    <a href="#gallery" data-i18n="gallery">Gallery</a>
     <a href="#info">Info</a>
-    <div class="lang" role="group" aria-label="Language / Langue">
-      <button type="button" data-lang="en" aria-pressed="true" lang="en">EN</button><span aria-hidden="true">/</span><button type="button" data-lang="fr" aria-pressed="false" lang="fr">FR</button>
+    <div class="lang">
+      <button type="button" id="lang-toggle" lang="fr" aria-label="Français">FR</button>
     </div>
   </nav>
 
@@ -255,7 +254,7 @@
       <p class="cap" data-i18n="mapp">Minute MAPP piece, 2026</p>
     </article>
 
-    <section class="loops" aria-label="Short loops">
+    <section class="loops" id="gallery" aria-label="Short loops">
       <video class="reveal" muted loop playsinline preload="none" poster="media/loop-grand-mal-1.jpg" aria-label="Animation loop from Grand Mal">
         <source src="media/loop-grand-mal-1.mp4" type="video/mp4">
       </video>
@@ -356,14 +355,14 @@
         reel1: 'Motion Design Reel, 2025', reel2: '2D Animation Reel, 2024',
         play: 'Play', play1: 'Play Motion Design Reel 2025', play2: 'Play 2D Animation Reel 2024',
         top: 'Back to top', close: 'Close',
-        mapp: 'Minute MAPP piece, 2026', play3: 'Play Minute MAPP piece 2026'
+        gallery: 'Gallery', mapp: 'Minute MAPP piece, 2026', play3: 'Play Minute MAPP piece 2026'
       },
       fr: {
         bio: 'Rayane est une artiste multidisciplinaire établie à Montréal qui travaille en animation 2D. Sa pratique se concentre sur l’animation image par image et les techniques d’animation traditionnelles, combinées aux techniques mixtes et au motion design. Son travail prend la forme de courts métrages d’animation qui accordent une place importante à l’animation traditionnelle et expérimentale.',
         reel1: 'Démo motion design, 2025', reel2: 'Démo animation 2D, 2024',
         play: 'Lecture', play1: 'Lire la démo motion design 2025', play2: 'Lire la démo animation 2D 2024',
         top: 'Retour en haut', close: 'Fermer',
-        mapp: 'Œuvre Minute MAPP, 2026', play3: 'Lire l’œuvre Minute MAPP 2026'
+        gallery: 'Galerie', mapp: 'Œuvre Minute MAPP, 2026', play3: 'Lire l’œuvre Minute MAPP 2026'
       }
     };
     const setLang = (lang) => {
@@ -375,14 +374,20 @@
       const words = t.bio.split(/\s+/);
       bio.innerHTML = words.map((w, i) => `<span class="w" style="--i:${i}">${w}</span>`).join(' ');
       document.getElementById('email').style.setProperty('--i', words.length + 4);
-      document.querySelectorAll('.lang button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
+      // One switch that names the other language: shows FR on the English page, EN on the French one.
+      const other = lang === 'fr' ? 'en' : 'fr';
+      const toggle = document.getElementById('lang-toggle');
+      toggle.textContent = other.toUpperCase();
+      toggle.lang = other;
+      toggle.dataset.lang = other;
+      toggle.setAttribute('aria-label', other === 'fr' ? 'Français' : 'English');
       try { localStorage.setItem('lang', lang); } catch (e) {}
     };
     let startLang = 'en';
     try { startLang = localStorage.getItem('lang') || ''; } catch (e) { startLang = ''; }
     if (!I18N[startLang]) startLang = (navigator.language || '').toLowerCase().startsWith('fr') ? 'fr' : 'en';
     setLang(startLang);
-    document.querySelectorAll('.lang button').forEach((b) => b.addEventListener('click', () => setLang(b.dataset.lang)));
+    document.getElementById('lang-toggle').addEventListener('click', (e) => setLang(e.currentTarget.dataset.lang));
     infoEl.classList.add('armed');
     const reveal = new IntersectionObserver((entries) => {
       if (entries.some((e) => e.isIntersecting)) { infoEl.classList.add('play'); reveal.disconnect(); }
