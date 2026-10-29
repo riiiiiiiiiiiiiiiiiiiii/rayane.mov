@@ -324,21 +324,27 @@
   <script>
     // Short loops: download and start only when the row is near the viewport,
     // and stay on the poster frame for viewers who prefer reduced motion.
-    const loops = document.querySelectorAll('.loops video');
+    const loops = [...document.querySelectorAll('.loops video')];
     if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      const startLoops = () => loops.forEach((v) => { v.load(); v.play().catch(() => {}); });
-      // If the tab was in the background when the loops started, resume them once it is visible again.
-      document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') loops.forEach((v) => { if (v.readyState > 0 && v.paused) v.play().catch(() => {}); });
-      });
+      // Each loop plays while it is on screen and pauses when it leaves. Safari pauses muted
+      // videos that are off screen and won't restart them on its own, so we restart them here.
+      const onScreen = new Set();
+      const tryPlay = (v) => { v.muted = true; const p = v.play(); if (p) p.catch(() => {}); };
+      const retry = () => onScreen.forEach((v) => { if (v.paused) tryPlay(v); });
       if ('IntersectionObserver' in window) {
-        const io = new IntersectionObserver((entries) => {
-          if (entries.some((e) => e.isIntersecting)) { startLoops(); io.disconnect(); }
-        }, { rootMargin: '400px 0px' });
-        io.observe(document.querySelector('.loops'));
+        const vio = new IntersectionObserver((entries) => entries.forEach((e) => {
+          const v = e.target;
+          if (e.isIntersecting) { onScreen.add(v); tryPlay(v); }
+          else { onScreen.delete(v); if (!v.paused) v.pause(); }
+        }), { rootMargin: '200px 0px' });
+        loops.forEach((v) => vio.observe(v));
       } else {
-        startLoops();
+        loops.forEach((v) => { onScreen.add(v); tryPlay(v); });
       }
+      // Low Power Mode (iPhone, Mac) blocks autoplay until the visitor taps or clicks: retry then.
+      ['touchend', 'click', 'keydown'].forEach((ev) => document.addEventListener(ev, retry, { passive: true }));
+      // Resume after the tab comes back from the background.
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') retry(); });
     }
     // Dim the loops in step with how far the information section has scrolled into view.
     const loopsEl = document.querySelector('.loops');
