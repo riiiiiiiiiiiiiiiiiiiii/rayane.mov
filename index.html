@@ -177,8 +177,8 @@
     .info.play .w { animation: wordIn 360ms ease-out forwards; animation-delay: calc(var(--i) * 22ms); }
     @keyframes wordIn { to { opacity: 1; } }
     /* Signature: the ink outline masks a thick stroke that is drawn along the pen's centreline. */
-    .sig { margin-top: -24px; display: flex; justify-content: flex-end; }
-    .sig-svg { display: block; width: min(100%, 140px); height: auto; overflow: visible; transform: rotate(-6deg); transform-origin: right center; }
+    .sig { margin-top: 0; display: flex; justify-content: flex-end; }
+    .sig-svg { display: block; width: min(100%, 132px); height: auto; overflow: visible; transform: rotate(-6deg); transform-origin: right center; }
     .sig-stroke { fill: none; stroke: var(--ink); stroke-width: 34; stroke-linecap: round; stroke-linejoin: round; }
     /* Reveal sweeps left to right once the bio has finished appearing. */
     .info.armed .sig-svg { clip-path: inset(-10% 100% -10% 0); }
