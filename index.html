@@ -542,6 +542,49 @@
       addEventListener('scroll', () => { if (pts.length && !raf) raf = requestAnimationFrame(tick); }, { passive: true });
     })();
   </script>
+  <script>
+    // Visitor actions counted in GoatCounter. They appear in the dashboard next to page visits.
+    (() => {
+      const queue = [];
+      const ready = () => window.goatcounter && typeof window.goatcounter.count === 'function';
+      const track = (path, title) => {
+        const ev = { path, title: title || path, event: true };
+        try { if (ready()) window.goatcounter.count(ev); else queue.push(ev); } catch (e) {}
+      };
+      const flush = () => { try { if (ready()) queue.splice(0).forEach((ev) => window.goatcounter.count(ev)); } catch (e) {} };
+      addEventListener('load', () => { flush(); setTimeout(flush, 3000); });
+
+      // Reel plays
+      const reels = ['play-motion-design-reel-2025', 'play-experimental-animation-reel-2024', 'play-mapp-projection-2026'];
+      const titles = ['Played: Motion Design Reel 2025', 'Played: Experimental Animation Reel 2024', 'Played: MAPP projection piece 2026'];
+      document.querySelectorAll('.frame .play').forEach((btn, i) => btn.addEventListener('click', () => track(reels[i] || `play-reel-${i + 1}`, titles[i])));
+
+      // Contact
+      const email = document.getElementById('email');
+      if (email) email.addEventListener('click', () => track('email-click', 'Clicked email'));
+
+      // Menu
+      const nav = { '#top': ['menu-rayane', 'Menu: Rayane'], '#gallery': ['menu-gallery', 'Menu: Gallery'], '#info': ['menu-info', 'Menu: Info'] };
+      document.querySelectorAll('.nav a').forEach((a) => { const n = nav[a.getAttribute('href')]; if (n) a.addEventListener('click', () => track(n[0], n[1])); });
+
+      // Language switch (runs after the switch, so the page language is the new one)
+      const lang = document.getElementById('lang-toggle');
+      if (lang) lang.addEventListener('click', () => {
+        const now = document.documentElement.lang === 'fr' ? 'fr' : 'en';
+        track(`language-${now}`, now === 'fr' ? 'Switched to French' : 'Switched to English');
+      });
+
+      // Reached the gallery and the about section (counted once per visit)
+      if ('IntersectionObserver' in window) {
+        const seen = { gallery: ['reached-gallery', 'Scrolled to gallery'], info: ['reached-about', 'Scrolled to about'] };
+        const so = new IntersectionObserver((entries) => entries.forEach((e) => {
+          if (!e.isIntersecting) return;
+          const n = seen[e.target.id]; if (n) track(n[0], n[1]); so.unobserve(e.target);
+        }), { threshold: 0.35 });
+        Object.keys(seen).forEach((id) => { const el = document.getElementById(id); if (el) so.observe(el); });
+      }
+    })();
+  </script>
   <script data-goatcounter="https://rayane.goatcounter.com/count"
           async src="//gc.zgo.at/count.js"></script>
 </body>
